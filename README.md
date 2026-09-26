@@ -29,7 +29,7 @@ C(t)/C0 = 1 / (1 + exp(kTh * (q0*m/Q - C0*t)))
 | 文件 | 职责 |
 | --- | --- |
 | `app/thomas.py` | Thomas 解求值（数值稳定、指数符号锁定） |
-| `app/timegrid.py` | 时间轴离散（默认网格自动覆盖到饱和） |
+| `app/timegrid.py` | 时间轴离散（默认网格沿指数坐标自适应加密前沿） |
 | `app/integrate.py` | 浓度亏量的梯形积分 |
 | `app/breakthrough.py` | 穿透时刻判定与 10%–90% 爬升窗口 |
 | `app/validation.py` | 输入校验（五参数必须为正，错误带原因） |
@@ -50,12 +50,20 @@ C(t)/C0 = 1 / (1 + exp(kTh * (q0*m/Q - C0*t)))
 ```json
 {
   "C0": 150.0, "Q": 2.0, "q0": 40.0, "kTh": 0.002, "m": 5000.0,
-  "threshold": 0.05, "t_end": null, "n_points": 400
+  "threshold": 0.05, "t_end": null, "n_points": null
 }
 ```
 
 `threshold` / `t_end` / `n_points` 均可省略。任一必需参数不为正数时，
 返回 400 并在 `error.reasons` 中逐条说明原因。
+
+默认请求（`t_end`、`n_points` 均省略）下，时间轴沿指数坐标
+`u = kTh·(q0·m/Q − C0·t)` 分段采样：10%–90% 爬升带所在的前沿段密集
+采样（带内不少于 40 个间隔），前沿之前与饱和尾部粗采样。这样无论速率
+常数多大、床装多大，前沿都不会被量化成一两个步长，从曲线上插值读出的
+爬升窗口与穿透时刻始终贴合 Thomas 解析解。显式给出 `t_end` 或
+`n_points` 时，仍使用 `[0, t_end]` 上的等距网格（默认 400 点），
+行为与原先完全一致。
 
 示例：
 

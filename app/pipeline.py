@@ -10,6 +10,7 @@ def run_condition(data: dict) -> dict:
     """针对单一工况，把整条曲线连同派生量一次算完。"""
     params, options = validation.validate_condition(data)
 
+    threshold = options["threshold"]
     times = timegrid.build_time_grid(
         params["C0"],
         params["Q"],
@@ -18,6 +19,7 @@ def run_condition(data: dict) -> dict:
         params["m"],
         t_end=options["t_end"],
         n_points=options["n_points"],
+        threshold=threshold,
     )
     ratios = thomas.thomas_curve(
         times, params["C0"], params["Q"], params["q0"], params["kTh"], params["m"]
@@ -26,7 +28,6 @@ def run_condition(data: dict) -> dict:
         times, ratios, params["Q"], params["C0"]
     )
 
-    threshold = options["threshold"]
     breakthrough_time = breakthrough.find_crossing_time(times, ratios, threshold)
     window = breakthrough.rise_window(times, ratios)
 
